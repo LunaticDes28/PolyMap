@@ -1,0 +1,186 @@
+{
+    "techData": {
+		"basic": {
+			"techUnlocks": [
+				"organization",
+				"climbing",
+				"fishing",
+				"hunting",
+				"riding"
+			],
+			"unitUnlocks": [
+				"giant",
+				"bunny",
+				"scout",
+				"transportship",
+				"warrior",
+				"babydragon",
+				"firedragon",
+				"dagger",
+				"larva"
+			],
+			"improvementUnlocks": [
+				"city",
+				"ruin"
+			],
+			"movementUnlocks": {
+				"field": 1,
+				"forest": 2,
+				"ice": 1,
+				"wetland":2
+			},
+			"cost": 0,
+			"idx": 0
+		},
+		"mining": {
+			"techUnlocks": [
+				"smithery"
+			],
+			"improvementUnlocks": [
+				"mine"
+			],
+			"abilityUnlocks": [
+
+			],
+			"cost": 2,
+			"idx": 23
+		},
+		"ramming": {
+			"techUnlocks": [
+				"aquatism"
+			],
+			"unitUnlocks": [
+				"rammership"
+			],
+			"abilityUnlocks": [
+
+			],
+			"cost": 2,
+			"idx": 44
+		}
+    },
+	"modeTech": {
+		"conquest": {
+			"basic": { "addImprovementUnlocks": ["citadel"] },
+			"mining": { "addAbilityUnlocks": ["mountaincitadel"] },
+			"ramming": { "addAbilityUnlocks": ["watercitadel"] }
+		},
+		"reign": {
+			"basic": { "addImprovementUnlocks": ["citadel"] },
+			"mining": { "addAbilityUnlocks": ["mountaincitadel"] },
+			"ramming": { "addAbilityUnlocks": ["watercitadel"] }
+		}
+	},
+    "improvementData":{
+		"citadel": {
+			"cost": 20,
+			"terrainRequirements": [
+				{
+					"terrain": "field"
+				},
+				{
+					"terrain": "forest"
+				},
+				{
+					"terrain": "mountain"
+				},
+				{
+					"terrain": "water"
+				},
+				{
+					"terrain": "ocean"
+				}
+			],
+			"improvementAbilities": [
+				"citadel"
+			],
+			"routes": [
+				"ocean",
+				"water",
+				"wetland"
+			],
+			"idx": -1
+		}
+    },
+    "unitData":{
+		"citadelrammership": {
+			"health": 100,
+			"movement": 3,
+			"range": 1,
+			"defence": 30,
+			"attack": 30,
+			"hidden": true,
+			"unitAbilities": [
+				"dash",
+				"swim",
+				"water"
+			],
+			"weapon": 16,
+			"promotionLimit": 3,
+			"prefab": "rammership",
+			"idx": -1
+		}
+    },
+	"improvementAbility": {
+		"citadel": {
+			"idx": -1
+		},
+		"freemanual": {
+			"idx": -1
+		}
+	},
+	"playerAbility": {
+		"mountaincitadel": {
+			"idx": -1
+		},
+		"watercitadel": {
+			"idx": -1
+		}
+	},
+	"cityReward": {
+		"evacuation": {
+			"idx": -1,
+			"cityRequirements": [
+				{
+					"mode": [
+						"conquest",
+						"reign"	
+					],
+					"level": 1,
+					"notCapital": true
+				}
+			]
+		},
+		"valhalla": {
+			"idx": -1,
+			"cityRequirements": [
+				{
+					"mode": [
+						"conquest",
+						"reign"	
+					],
+					"level": 2,
+					"notCapital": false
+				}
+			]
+		},
+		"taxreform": {
+			"idx": -1,
+			"cityRequirements": [
+				{
+					"mode": [
+						"conquest",
+						"reign"	
+					],
+					"level": 3,
+					"notCapital": false
+				}
+			]
+		}
+	},
+	"opinion": {
+        "obstinate":{
+            "idx": -1
+        }
+    }
+}
