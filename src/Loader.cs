@@ -1,103 +1,111 @@
+using System;
+using System.Collections.Generic;
 using BepInEx.Logging;
 using HarmonyLib;
 using PolytopiaBackendBase.Game;
-using Il2CppInterop.Runtime.Injection;
-using Polytopia.Data;
 using PolyMod;
 
-namespace PolyMode
+namespace PolyMap
 {
     public static class Loader
     {
-        public static int opinionAutoidx = Enum.GetValues(typeof(OpinionManager.Type)).Length;
-        
         public static ManualLogSource? modLogger;
+
+        public static int mapPresetsAutoidx = Enum.GetValues(typeof(MapPreset)).Length;
+
+        /// <summary>
+        /// Registered custom maps in order (for UI append order).
+        /// </summary>
+        public static readonly List<CustomMapPreset> CustomMaps = new();
+
+        public struct CustomMapPreset
+        {
+            public string Id;          // enum / registry key, e.g. "river"
+            public string DisplayName; // UI label, e.g. "River"
+            public int IdValue;        // MapPreset int value
+        }
 
         public static void Load(ManualLogSource logger)
         {
             modLogger = logger;
 
-            try
-            {
-                ClassInjector.RegisterTypeInIl2Cpp<CitadelOverlay>();
-                modLogger?.LogInfo("[Loader] CitadelOverlay successfully registered in IL2CPP.");
-                ClassInjector.RegisterTypeInIl2Cpp<MonumentOverlay>();
-                modLogger?.LogInfo("[Loader] MonumentOverlay successfully registered in IL2CPP.");
-            }
-            catch (Exception ex)
-            {
-                modLogger?.LogError($"[Loader] Failed to register custom MonoBehaviours: {ex}");
-            }
+            // Register maps before patches that read the list
+            RegisterCustomMapPreset("river", "River");
+            // RegisterCustomMapPreset("archipelago", "Archipelago");
 
-            // 載入所有 Harmony 補丁
             Harmony.CreateAndPatchAll(typeof(Loader));
-            Harmony.CreateAndPatchAll(typeof(Mode));
-            Harmony.CreateAndPatchAll(typeof(MapAnalysis));
+            Harmony.CreateAndPatchAll(typeof(Main));
+            Harmony.CreateAndPatchAll(typeof(UI));
 
-            Harmony.CreateAndPatchAll(typeof(Conquest.Main));
-            Harmony.CreateAndPatchAll(typeof(Conquest.UI_2));
-            Harmony.CreateAndPatchAll(typeof(Conquest.AI_2));
-            Harmony.CreateAndPatchAll(typeof(Rush.Main));
-            Harmony.CreateAndPatchAll(typeof(Rush.UI_2));
-            Harmony.CreateAndPatchAll(typeof(Rush.AI_2));
-
-            Harmony.CreateAndPatchAll(typeof(CitadelOverlay));
-            Harmony.CreateAndPatchAll(typeof(MonumentOverlay));
-            Harmony.CreateAndPatchAll(typeof(OverlayPatches));
-
-            RegisterCustomGameMode("conquest");
-            RegisterCustomGameMode("reign");
-            RegisterCustomGameMode("rusha");
-            RegisterCustomGameMode("rushb");
-            RegisterCustomGameMode("rushc");
-
-            PolyMod.Loader.AddPatchDataType("cityReward", typeof(CityReward));
-            PolyMod.Loader.AddPatchDataType("opinion", typeof(OpinionManager.Type));
-        
-            modLogger?.LogInfo("[Conquest] Mod initialized");
+            modLogger?.LogInfo("[PolyMap] Mod initialized");
         }
 
-        public static void RegisterCustomGameMode(string id)
+        /// <summary>
+        /// Same pattern as RegisterCustomGameMode: double EnumCache map + bump index.
+        /// </summary>
+        public static void RegisterCustomMapPreset(string id, string? displayName = null)
         {
             try
             {
-                modLogger?.LogInfo($"[Loader] Initializing custom GameMode registration for key: '{id}'");
+                if (string.IsNullOrEmpty(id))
+                    throw new ArgumentException(nameof(id));
 
-                // 1. Double map the string identifier to the next available native index slot
-                EnumCache<GameMode>.AddMapping(id, (GameMode)Registry.gameModesAutoidx);
-                EnumCache<GameMode>.AddMapping(id, (GameMode)Registry.gameModesAutoidx);
-                
-                modLogger?.LogInfo($"[Loader] EnumCache mapping successfully bound to index: {Registry.gameModesAutoidx}");
+                string label = string.IsNullOrEmpty(displayName)
+                    ? char.ToUpperInvariant(id[0]) + id.Substring(1)
+                    : displayName;
 
-                // 2. Increment the auto-index counter to keep memory aligned for other mods
-                Registry.gameModesAutoidx++;
-                modLogger?.LogInfo($"[Loader] Registration completed. Next index: {Registry.gameModesAutoidx}");
+                int value = mapPresetsAutoidx;
+
+                EnumCache<MapPreset>.AddMapping(id, (MapPreset)value);
+                EnumCache<MapPreset>.AddMapping(id, (MapPreset)value);
+
+                CustomMaps.Add(new CustomMapPreset
+                {
+                    Id = id,
+                    DisplayName = label,
+                    IdValue = value
+                });
+
+                modLogger?.LogInfo(
+                    $"[PolyMap] MapPreset '{id}' → {value}, UI=\"{label}\"");
+
+                mapPresetsAutoidx++;
             }
             catch (Exception ex)
             {
-                modLogger?.LogError($"[Loader] FAILURE: Access violation mapping GameMode enum cache: {ex}");
+                modLogger?.LogError($"[PolyMap] RegisterCustomMapPreset({id}): {ex}");
             }
         }
-        public static void RegisterCustomOpinion(string id)
+
+        public static bool IsCustomMapPreset(MapPreset preset)
         {
-            try
-            {
-                modLogger?.LogInfo($"[Loader] Initializing custom Opinion registration for key: '{id}'");
+            int v = (int)preset;
+            for (int i = 0; i < CustomMaps.Count; i++)
+                if (CustomMaps[i].IdValue == v)
+                    return true;
+            return false;
+        }
 
-                // 1. Double map the string identifier to the next available native index slot
-                EnumCache<OpinionManager.Type>.AddMapping(id, (OpinionManager.Type)opinionAutoidx);
-                EnumCache<OpinionManager.Type>.AddMapping(id, (OpinionManager.Type)opinionAutoidx);
+        public static bool IsCustomMapPreset(int presetId)
+        {
+            for (int i = 0; i < CustomMaps.Count; i++)
+                if (CustomMaps[i].IdValue == presetId)
+                    return true;
+            return false;
+        }
 
-                modLogger?.LogInfo($"[Loader] EnumCache mapping successfully bound to index: {opinionAutoidx}");
-   
-                // 2. Increment the auto-index counter to keep memory aligned for other mods
-                opinionAutoidx++;
-                modLogger?.LogInfo($"[Loader] Registration completed. Next index: {opinionAutoidx}");
-            }
-            catch (Exception ex)
+        public static bool TryGetCustom(string id, out CustomMapPreset preset)
+        {
+            for (int i = 0; i < CustomMaps.Count; i++)
             {
-                modLogger?.LogError($"[Loader] FAILURE: Access violation mapping CityReward enum cache: {ex}");
+                if (CustomMaps[i].Id.Equals(id, StringComparison.OrdinalIgnoreCase))
+                {
+                    preset = CustomMaps[i];
+                    return true;
+                }
             }
+            preset = default;
+            return false;
         }
     }
 }
