@@ -31,7 +31,7 @@ namespace PolyMap
 
             // Register maps before patches that read the list
             RegisterCustomMapPreset("river", "River");
-            // RegisterCustomMapPreset("archipelago", "Archipelago");
+            RegisterCustomMapPreset("galapagos", "Galapagos");
 
             Harmony.CreateAndPatchAll(typeof(Loader));
             Harmony.CreateAndPatchAll(typeof(Main));
@@ -41,7 +41,7 @@ namespace PolyMap
         }
 
         /// <summary>
-        /// Same pattern as RegisterCustomGameMode: double EnumCache map + bump index.
+        /// Creates Enum for custom map type; Binary inputs: id, displayName
         /// </summary>
         public static void RegisterCustomMapPreset(string id, string? displayName = null)
         {

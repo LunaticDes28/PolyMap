@@ -12,11 +12,11 @@ namespace PolyMap
         // -----------------------------------------------------------------
         // Helpers
         // -----------------------------------------------------------------
-        private static bool IsRiverMap(GameState? state = null)
+        private static bool IsCustomMap(GameState state, string id)
         {
-            if (!Loader.TryGetCustom("river", out var river))
+            if (!Loader.TryGetCustom(id, out var river))
                 return false;
-            if (UI.IsRiverSelected)
+            if (UI.IsCustomSelected)
                 return true;
             try
             {
@@ -75,7 +75,7 @@ namespace PolyMap
         {
             try
             {
-                if (settings == null || !IsRiverMap(state))
+                if (settings == null || !IsCustomMap(state, "river"))
                     return;
                 if (!Loader.TryGetCustom("river", out var river))
                     return;
@@ -106,7 +106,7 @@ namespace PolyMap
         [HarmonyPatch(typeof(MapGenerator), nameof(MapGenerator.Generate))]
         private static void Generate_StampRiver_Postfix(GameState state, MapGeneratorSettings settings)
         {
-            if (IsRiverMap(state))
+            if (IsCustomMap(state, "river"))
                 UI.SelectedCustomMapId = null;
         }
 
@@ -125,7 +125,7 @@ namespace PolyMap
             {
                 if (gameState?.Map == null || settings == null)
                     return;
-                if (!IsRiverMap(gameState))
+                if (!IsCustomMap(gameState, "river"))
                     return;
                 CarveRiverAndBridgeVillages(__instance, gameState, settings);
             }
@@ -346,8 +346,8 @@ namespace PolyMap
             for (int i = 0; i < length; i++)
                 widths[i] = rng.Range(0, 100) < 55 ? 2 : 3;
 
-            int necks = Math.Max(minNecks, length / 3);
-            int spacing = Math.Max(4, length / (necks + 1));
+            int necks = Math.Max(minNecks, (length + 1) / 3);
+            int spacing = Math.Max(3, (length + 1) / (necks + 1));
 
             for (int n = 1; n <= necks; n++)
             {
